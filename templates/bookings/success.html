@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-md mx-auto bg-white rounded-2xl shadow p-6 text-center">
+  <div class="text-5xl">✅</div>
+  <h1 class="mt-3 text-2xl font-bold text-pink-600">Booking received!</h1>
+  <p class="mt-1 text-gray-600">Thank you, {{ booking.customer_name }}.</p>
+
+  <div class="mt-5 text-left space-y-2 text-sm">
+    <p><strong>Date:</strong> {{ booking.date|date:"d M Y" }}</p>
+    <p><strong>Time:</strong> {{ booking.time|time:"h:i A" }}</p>
+    <p><strong>Payment:</strong> {{ booking.get_payment_method_display }}</p>
+
+    <div class="border-t pt-2">
+      {% for s in booking.services.all %}
+        <div class="flex justify-between">
+          <span>{{ s.name }}</span><span>₹{{ s.price|floatformat:0 }}</span>
+        </div>
+      {% endfor %}
+      <div class="flex justify-between font-bold border-t mt-2 pt-2">
+        <span>Total amount</span><span>₹{{ booking.total_amount|floatformat:0 }}</span>
+      </div>
+    </div>
+  </div>
+
+  {% if salon %}
+    <p class="mt-5 text-xs text-gray-500">Questions? Call {{ salon.phone }}</p>
+  {% endif %}
+
+  <a href="{% url 'home' %}" class="inline-block mt-5 text-pink-600 underline text-sm">
+    Make another booking
+  </a>
+</div>
+{% endblock %}
