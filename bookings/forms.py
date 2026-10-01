@@ -67,7 +67,7 @@ class BookingForm(forms.ModelForm):
 
         base = (
             "w-full rounded-lg border border-gray-300 px-3 py-2 "
-            "focus:outline-none focus:ring-2 focus:ring-pink-400"
+            "focus:outline-none focus:ring-2 focus:ring-brand-400"
         )
         for name, field in self.fields.items():
             if name != "services":

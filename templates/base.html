@@ -5,8 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Salon Booker{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              300: '#93c5fd',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#1d4ed8',
+              700: '#1e3a8a',
+            },
+          },
+        },
+      },
+    };
+  </script>
 </head>
-<body class="bg-pink-50 min-h-screen text-gray-800">
+<body class="bg-brand-50 min-h-screen text-gray-800">
   <main class="max-w-5xl mx-auto p-4 md:p-8">
     {% block content %}{% endblock %}
   </main>

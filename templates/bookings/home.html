@@ -4,7 +4,7 @@
 
   <aside class="md:col-span-1 bg-white rounded-2xl shadow p-6 h-fit">
     {% if salon %}
-      <h1 class="text-2xl font-bold text-pink-600">{{ salon.name }}</h1>
+      <h1 class="text-2xl font-bold text-brand-600">{{ salon.name }}</h1>
       <p class="mt-3 text-gray-600">📍 {{ salon.address }}</p>
       <p class="mt-1 text-gray-600">📞 {{ salon.phone }}</p>
       <p class="mt-1 text-gray-600">
@@ -56,7 +56,7 @@
                   </span>
                 {% else %}
                   <button type="button" data-time="{{ slot.value }}"
-                          class="slot-btn rounded-lg border border-pink-300 px-3 py-1 text-sm hover:bg-pink-100">
+                          class="slot-btn rounded-lg border border-brand-300 px-3 py-1 text-sm hover:bg-brand-100">
                     {{ slot.label }}
                   </button>
                 {% endif %}
@@ -86,13 +86,13 @@
         </div>
       {% endfor %}
 
-      <div class="flex justify-between items-center bg-pink-50 rounded-lg p-4">
+      <div class="flex justify-between items-center bg-brand-50 rounded-lg p-4">
         <span class="font-medium">Total amount</span>
-        <span id="total" class="text-xl font-bold text-pink-600">₹0</span>
+        <span id="total" class="text-xl font-bold text-brand-600">₹0</span>
       </div>
 
       <button type="submit"
-              class="w-full bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-lg py-3">
+              class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-lg py-3">
         Confirm booking
       </button>
     </form>
@@ -118,8 +118,8 @@
   const dayBtns = document.querySelectorAll('.day-btn');
   const panels = document.querySelectorAll('.day-panel');
   const slotBtns = document.querySelectorAll('.slot-btn');
-  const activeDay = ['bg-pink-600', 'text-white', 'border-pink-600'];
-  const activeSlot = ['bg-pink-600', 'text-white'];
+  const activeDay = ['bg-brand-600', 'text-white', 'border-brand-600'];
+  const activeSlot = ['bg-brand-600', 'text-white'];
 
   function clearSlots() {
     slotBtns.forEach(s => activeSlot.forEach(c => s.classList.remove(c)));

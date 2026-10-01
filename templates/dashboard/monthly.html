@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between flex-wrap gap-3">
+  <h1 class="text-2xl font-bold text-brand-600">Monthly dashboard</h1>
+  <div class="flex items-center gap-2">
+    <a href="?month={{ prev_month }}"
+       class="rounded-lg border bg-white px-3 py-1 text-sm hover:bg-brand-100">← Previous</a>
+    <span class="font-semibold px-2">{{ month|date:"F Y" }}</span>
+    <a href="?month={{ next_month }}"
+       class="rounded-lg border bg-white px-3 py-1 text-sm hover:bg-brand-100">Next →</a>
+  </div>
+</div>
+
+<div class="mt-6 grid grid-cols-2 md:grid-cols-5 gap-4">
+  <div class="bg-white rounded-2xl shadow p-4">
+    <p class="text-xs text-gray-500">Bookings</p>
+    <p class="text-2xl font-bold">{{ total_bookings }}</p>
+  </div>
+  <div class="bg-white rounded-2xl shadow p-4">
+    <p class="text-xs text-gray-500">Total amount</p>
+    <p class="text-2xl font-bold text-brand-600">₹{{ total_amount|floatformat:0 }}</p>
+  </div>
+  <div class="bg-white rounded-2xl shadow p-4">
+    <p class="text-xs text-gray-500">Received (paid)</p>
+    <p class="text-2xl font-bold text-green-600">₹{{ received|floatformat:0 }}</p>
+  </div>
+  <div class="bg-white rounded-2xl shadow p-4">
+    <p class="text-xs text-gray-500">Pending (unpaid)</p>
+    <p class="text-2xl font-bold text-amber-600">₹{{ pending|floatformat:0 }}</p>
+  </div>
+  <div class="bg-white rounded-2xl shadow p-4">
+    <p class="text-xs text-gray-500">Cancelled</p>
+    <p class="text-2xl font-bold text-gray-500">{{ cancelled }}</p>
+  </div>
+</div>
+
+{% if total_bookings %}
+
+<section class="mt-6 bg-white rounded-2xl shadow p-6">
+  <h2 class="font-semibold">Revenue and bookings per day</h2>
+  <div class="relative mt-3 h-72">
+    <canvas id="dailyChart"></canvas>
+  </div>
+</section>
+
+<div class="mt-6 grid gap-6 md:grid-cols-3">
+  <section class="bg-white rounded-2xl shadow p-6">
+    <h2 class="font-semibold">Paid vs pending</h2>
+    <div class="relative mt-3 h-60">
+      <canvas id="paidChart"></canvas>
+    </div>
+  </section>
+
+  <section class="bg-white rounded-2xl shadow p-6">
+    <h2 class="font-semibold">Cash vs online</h2>
+    <div class="relative mt-3 h-60">
+      <canvas id="methodChart"></canvas>
+    </div>
+  </section>
+
+  <section class="bg-white rounded-2xl shadow p-6">
+    <h2 class="font-semibold">Popular services</h2>
+    <div class="relative mt-3 h-60">
+      <canvas id="serviceChart"></canvas>
+    </div>
+  </section>
+</div>
+
+{{ chart|json_script:"chart-data" }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+  const data = JSON.parse(document.getElementById('chart-data').textContent);
+  const PINK = '#db2777', LIGHT_PINK = '#f9a8d4', GREEN = '#16a34a', AMBER = '#d97706';
+  const rupee = v => '₹' + v;
+
+  Chart.defaults.font.family = 'system-ui, sans-serif';
+
+  // Revenue (line) + bookings (bars) for every day of the month
+  new Chart(document.getElementById('dailyChart'), {
+    type: 'bar',
+    data: {
+      labels: data.days,
+      datasets: [
+        {
+          type: 'line',
+          label: 'Amount (₹)',
+          data: data.amounts,
+          borderColor: PINK,
+          backgroundColor: 'rgba(219, 39, 119, 0.15)',
+          fill: true,
+          tension: 0.35,
+          pointRadius: 3,
+          yAxisID: 'y',
+          order: 0,
+        },
+        {
+          label: 'Bookings',
+          data: data.counts,
+          backgroundColor: LIGHT_PINK,
+          borderRadius: 4,
+          yAxisID: 'y1',
+          order: 1,
+        },
+      ],
+    },
+    options: {
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: { title: { display: true, text: 'Day of month' } },
+        y: { beginAtZero: true, ticks: { callback: rupee } },
+        y1: {
+          beginAtZero: true,
+          position: 'right',
+          grid: { drawOnChartArea: false },
+          ticks: { stepSize: 1, precision: 0 },
+        },
+      },
+    },
+  });
+
+  const doughnutOptions = {
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: { callbacks: { label: ctx => ctx.label + ': ₹' + ctx.parsed } },
+    },
+  };
+
+  // Paid vs pending
+  new Chart(document.getElementById('paidChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Received (paid)', 'Pending (unpaid)'],
+      datasets: [{ data: [data.paid, data.unpaid], backgroundColor: [GREEN, AMBER] }],
+    },
+    options: doughnutOptions,
+  });
+
+  // Cash vs online
+  new Chart(document.getElementById('methodChart'), {
+    type: 'doughnut',
+    data: {
+      labels: data.method_labels,
+      datasets: [{ data: data.method_amounts, backgroundColor: [PINK, LIGHT_PINK] }],
+    },
+    options: doughnutOptions,
+  });
+
+  // Popular services
+  new Chart(document.getElementById('serviceChart'), {
+    type: 'bar',
+    data: {
+      labels: data.service_labels,
+      datasets: [{
+        label: 'Times booked',
+        data: data.service_counts,
+        backgroundColor: PINK,
+        borderRadius: 4,
+      }],
+    },
+    options: {
+      indexAxis: 'y',
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } },
+    },
+  });
+</script>
+
+{% else %}
+  <p class="mt-6 bg-white rounded-2xl shadow p-6 text-gray-500">No bookings this month.</p>
+{% endif %}
+
+<p class="mt-6 text-sm">
+  <a href="{% url 'home' %}" class="text-brand-600 underline">Booking page</a> ·
+  <a href="/admin/" class="text-brand-600 underline">Admin</a>
+</p>
+
+{% endblock %}
