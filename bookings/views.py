@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from salon.models import Salon, Service
 from .availability import build_availability
+from .excel import export_bookings_to_excel
 from .forms import BookingForm
 from .models import Booking
 
@@ -17,6 +18,7 @@ def home(request):
             except IntegrityError:
                 form.add_error(None, "Sorry, that slot was just taken. Please choose another.")
             else:
+                export_bookings_to_excel()
                 request.session["last_booking"] = booking.pk
                 return redirect("booking_success")
     else:
