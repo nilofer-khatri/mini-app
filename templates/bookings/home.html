@@ -28,7 +28,48 @@
   <section class="md:col-span-2 bg-white rounded-2xl shadow p-6">
     <h2 class="text-xl font-bold">Book an appointment</h2>
 
-    <form method="post" class="mt-4 space-y-4">
+    <div class="mt-4">
+      <p class="text-sm font-medium mb-2">1. Pick a day</p>
+      <div class="flex gap-2 overflow-x-auto pb-2">
+        {% for day in days %}
+          <button type="button" data-day="{{ day.iso }}"
+                  class="day-btn shrink-0 rounded-xl border border-gray-300 px-4 py-2 text-center text-sm">
+            <div class="font-semibold">{{ day.label }}</div>
+            <div class="text-xs opacity-75">{{ day.short_date }}</div>
+            <div class="text-xs opacity-75">{{ day.free_count }} free</div>
+          </button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <p class="text-sm font-medium mb-2">2. Pick a time</p>
+      {% for day in days %}
+        <div class="day-panel hidden" data-day="{{ day.iso }}">
+          {% for period, slots in day.groups %}
+            <p class="text-xs uppercase tracking-wide text-gray-500 mt-3 mb-1">{{ period }}</p>
+            <div class="flex flex-wrap gap-2">
+              {% for slot in slots %}
+                {% if slot.booked %}
+                  <span class="rounded-lg border bg-gray-100 px-3 py-1 text-sm text-gray-400 line-through">
+                    {{ slot.label }}
+                  </span>
+                {% else %}
+                  <button type="button" data-time="{{ slot.value }}"
+                          class="slot-btn rounded-lg border border-pink-300 px-3 py-1 text-sm hover:bg-pink-100">
+                    {{ slot.label }}
+                  </button>
+                {% endif %}
+              {% endfor %}
+            </div>
+          {% empty %}
+            <p class="text-sm text-gray-500">No slots left on this day.</p>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <form method="post" class="mt-6 space-y-4 border-t pt-4">
       {% csrf_token %}
 
       {% for e in form.non_field_errors %}
@@ -69,5 +110,51 @@
   }
   boxes.forEach(b => b.addEventListener('change', updateTotal));
   updateTotal();
+</script>
+
+<script>
+  const dateInput = document.querySelector('input[name="date"]');
+  const timeSelect = document.querySelector('select[name="time"]');
+  const dayBtns = document.querySelectorAll('.day-btn');
+  const panels = document.querySelectorAll('.day-panel');
+  const slotBtns = document.querySelectorAll('.slot-btn');
+  const activeDay = ['bg-pink-600', 'text-white', 'border-pink-600'];
+  const activeSlot = ['bg-pink-600', 'text-white'];
+
+  function clearSlots() {
+    slotBtns.forEach(s => activeSlot.forEach(c => s.classList.remove(c)));
+  }
+
+  function showDay(iso) {
+    let found = false;
+    panels.forEach(p => {
+      const match = p.dataset.day === iso;
+      p.classList.toggle('hidden', !match);
+      if (match) found = true;
+    });
+    dayBtns.forEach(b => {
+      const match = b.dataset.day === iso;
+      activeDay.forEach(c => b.classList.toggle(c, match));
+    });
+    return found;
+  }
+
+  dayBtns.forEach(b => b.addEventListener('click', () => {
+    dateInput.value = b.dataset.day;
+    timeSelect.value = '';
+    clearSlots();
+    showDay(b.dataset.day);
+  }));
+
+  slotBtns.forEach(s => s.addEventListener('click', () => {
+    timeSelect.value = s.dataset.time;
+    clearSlots();
+    activeSlot.forEach(c => s.classList.add(c));
+  }));
+
+  dateInput.addEventListener('change', () => showDay(dateInput.value));
+
+  // Start on the day already in the date field (today by default)
+  if (!showDay(dateInput.value) && dayBtns.length) showDay(dayBtns[0].dataset.day);
 </script>
 {% endblock %}

@@ -2,6 +2,7 @@ from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, redirect, render
 
 from salon.models import Salon, Service
+from .availability import build_availability
 from .forms import BookingForm
 from .models import Booking
 
@@ -25,6 +26,7 @@ def home(request):
         "salon": salon,
         "form": form,
         "services": Service.objects.filter(is_active=True),
+        "days": build_availability(salon),
     }
     return render(request, "bookings/home.html", context)
 
