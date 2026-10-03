@@ -57,7 +57,10 @@ class BookingForm(forms.ModelForm):
             "customer_name", "customer_phone", "date",
             "time", "services", "payment_method",
         ]
-        widgets = {"date": forms.DateInput(attrs={"type": "date"})}
+        widgets = {
+            "date": forms.DateInput(attrs={"type": "date"}),
+            "customer_phone": forms.TextInput(attrs={"type": "tel", "inputmode": "tel"}),
+        }
 
     def __init__(self, *args, salon=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -66,7 +69,7 @@ class BookingForm(forms.ModelForm):
         self.initial.setdefault("date", date.today())
 
         base = (
-            "w-full rounded-lg border border-gray-300 px-3 py-2 "
+            "w-full rounded-lg border border-gray-300 px-3 py-3 text-base "
             "focus:outline-none focus:ring-2 focus:ring-brand-400"
         )
         for name, field in self.fields.items():

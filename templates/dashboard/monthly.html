@@ -14,23 +14,23 @@
 </div>
 
 <div class="mt-6 grid grid-cols-2 md:grid-cols-5 gap-4">
-  <div class="bg-white rounded-2xl shadow p-4">
+  <div class="min-w-0 bg-white rounded-2xl shadow p-4">
     <p class="text-xs text-gray-500">Bookings</p>
     <p class="text-2xl font-bold">{{ total_bookings }}</p>
   </div>
-  <div class="bg-white rounded-2xl shadow p-4">
+  <div class="min-w-0 bg-white rounded-2xl shadow p-4">
     <p class="text-xs text-gray-500">Total amount</p>
     <p class="text-2xl font-bold text-brand-600">₹{{ total_amount|floatformat:0 }}</p>
   </div>
-  <div class="bg-white rounded-2xl shadow p-4">
+  <div class="min-w-0 bg-white rounded-2xl shadow p-4">
     <p class="text-xs text-gray-500">Received (paid)</p>
     <p class="text-2xl font-bold text-green-600">₹{{ received|floatformat:0 }}</p>
   </div>
-  <div class="bg-white rounded-2xl shadow p-4">
+  <div class="min-w-0 bg-white rounded-2xl shadow p-4">
     <p class="text-xs text-gray-500">Pending (unpaid)</p>
     <p class="text-2xl font-bold text-amber-600">₹{{ pending|floatformat:0 }}</p>
   </div>
-  <div class="bg-white rounded-2xl shadow p-4">
+  <div class="min-w-0 bg-white rounded-2xl shadow p-4">
     <p class="text-xs text-gray-500">Cancelled</p>
     <p class="text-2xl font-bold text-gray-500">{{ cancelled }}</p>
   </div>
@@ -38,29 +38,29 @@
 
 {% if total_bookings %}
 
-<section class="mt-6 bg-white rounded-2xl shadow p-6">
+<section class="min-w-0 mt-6 bg-white rounded-2xl shadow p-6">
   <h2 class="font-semibold">Revenue and bookings per day</h2>
   <div class="relative mt-3 h-72">
     <canvas id="dailyChart"></canvas>
   </div>
 </section>
 
-<div class="mt-6 grid gap-6 md:grid-cols-3">
-  <section class="bg-white rounded-2xl shadow p-6">
+<div class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
+  <section class="min-w-0 bg-white rounded-2xl shadow p-6">
     <h2 class="font-semibold">Paid vs pending</h2>
     <div class="relative mt-3 h-60">
       <canvas id="paidChart"></canvas>
     </div>
   </section>
 
-  <section class="bg-white rounded-2xl shadow p-6">
+  <section class="min-w-0 bg-white rounded-2xl shadow p-6">
     <h2 class="font-semibold">Cash vs online</h2>
     <div class="relative mt-3 h-60">
       <canvas id="methodChart"></canvas>
     </div>
   </section>
 
-  <section class="bg-white rounded-2xl shadow p-6">
+  <section class="min-w-0 bg-white rounded-2xl shadow p-6">
     <h2 class="font-semibold">Popular services</h2>
     <div class="relative mt-3 h-60">
       <canvas id="serviceChart"></canvas>
@@ -72,7 +72,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
   const data = JSON.parse(document.getElementById('chart-data').textContent);
-  const PINK = '#db2777', LIGHT_PINK = '#f9a8d4', GREEN = '#16a34a', AMBER = '#d97706';
+  const BRAND = '#1d4ed8', LIGHT_BRAND = '#93c5fd', GREEN = '#16a34a', AMBER = '#d97706';
   const rupee = v => '₹' + v;
 
   Chart.defaults.font.family = 'system-ui, sans-serif';
@@ -87,8 +87,8 @@
           type: 'line',
           label: 'Amount (₹)',
           data: data.amounts,
-          borderColor: PINK,
-          backgroundColor: 'rgba(219, 39, 119, 0.15)',
+          borderColor: BRAND,
+          backgroundColor: 'rgba(29, 78, 216, 0.15)',
           fill: true,
           tension: 0.35,
           pointRadius: 3,
@@ -98,7 +98,7 @@
         {
           label: 'Bookings',
           data: data.counts,
-          backgroundColor: LIGHT_PINK,
+          backgroundColor: LIGHT_BRAND,
           borderRadius: 4,
           yAxisID: 'y1',
           order: 1,
@@ -144,7 +144,7 @@
     type: 'doughnut',
     data: {
       labels: data.method_labels,
-      datasets: [{ data: data.method_amounts, backgroundColor: [PINK, LIGHT_PINK] }],
+      datasets: [{ data: data.method_amounts, backgroundColor: [BRAND, LIGHT_BRAND] }],
     },
     options: doughnutOptions,
   });
@@ -157,7 +157,7 @@
       datasets: [{
         label: 'Times booked',
         data: data.service_counts,
-        backgroundColor: PINK,
+        backgroundColor: BRAND,
         borderRadius: 4,
       }],
     },
