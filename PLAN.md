@@ -7,5 +7,5 @@
 - [x] Step 5: Excel storage for bookings
 - [x] Step 6: Monthly dashboard
 - [x] Step 7: Desktop + mobile views
-- [ ] Step 8: Docker + Coolify deployment
+- [x] Step 8: Docker + Coolify deployment
 - [ ] Step 9: Testing and polish
