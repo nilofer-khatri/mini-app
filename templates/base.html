@@ -1,9 +1,18 @@
-<!DOCTYPE html>
+{% load static %}<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Salon Booker{% endblock %}</title>
+  <title>{% block title %}SalonSlotly{% endblock %}</title>
+
+  <link rel="manifest" href="{% url 'manifest' %}">
+  <link rel="icon" type="image/png" href="{% static 'icons/icon-192.png' %}">
+  <meta name="theme-color" content="#1e3a8a">
+  <link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="SalonSlotly">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -33,6 +42,7 @@
       <a href="{% url 'home' %}" class="hover:underline">Booking page</a>
       <a href="{% url 'dashboard' %}" class="hover:underline">Dashboard</a>
       <a href="{% url 'admin:index' %}" class="hover:underline">Admin</a>
+      <button id="installBtn" type="button" class="hidden hover:underline">Install app</button>
       <form method="post" action="{% url 'admin:logout' %}" class="ml-auto">
         {% csrf_token %}
         <button type="submit" class="hover:underline">Log out ({{ user.username }})</button>
@@ -44,5 +54,31 @@
   <main class="max-w-5xl mx-auto p-4 md:p-8">
     {% block content %}{% endblock %}
   </main>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+    }
+
+    // Shows the "Install app" button when the browser allows installing
+    let installPrompt = null;
+    const installBtn = document.getElementById('installBtn');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      installPrompt = e;
+      if (installBtn) installBtn.classList.remove('hidden');
+    });
+    if (installBtn) {
+      installBtn.addEventListener('click', async () => {
+        if (!installPrompt) return;
+        installPrompt.prompt();
+        installPrompt = null;
+        installBtn.classList.add('hidden');
+      });
+    }
+    window.addEventListener('appinstalled', () => {
+      if (installBtn) installBtn.classList.add('hidden');
+    });
+  </script>
 </body>
 </html>
