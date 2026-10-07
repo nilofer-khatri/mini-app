@@ -1,3 +1,4 @@
+from collections import Counter
 from datetime import datetime, time, timedelta
 
 from django.utils import timezone
@@ -5,6 +6,20 @@ from django.utils import timezone
 from .models import Booking
 
 DAYS_AHEAD = 7  # how many days the day strip shows (Today, Tomorrow, ...)
+
+
+def capacity_of(salon):
+    return salon.staff_count if salon else 1
+
+
+def slot_is_full(salon, day, slot_time):
+    """True when the slot already has as many active bookings as the salon has staff."""
+    taken = (
+        Booking.objects.filter(date=day, time=slot_time)
+        .exclude(status=Booking.Status.CANCELLED)
+        .count()
+    )
+    return taken >= capacity_of(salon)
 
 
 def day_label(day, today):
@@ -27,13 +42,14 @@ def build_availability(salon):
     """Return one entry per day, with Morning/Afternoon/Evening slots marked booked or free."""
     now = timezone.localtime()
     today = now.date()
+    capacity = capacity_of(salon)
 
     start = salon.opening_time if salon else time(9, 0)
     end = salon.closing_time if salon else time(20, 0)
     step = salon.slot_minutes if salon else 30
 
     last_day = today + timedelta(days=DAYS_AHEAD - 1)
-    booked = set(
+    counts = Counter(
         Booking.objects.filter(date__range=(today, last_day))
         .exclude(status=Booking.Status.CANCELLED)
         .values_list("date", "time")
@@ -53,7 +69,7 @@ def build_availability(salon):
                 groups[period_of(slot_time)].append({
                     "value": current.strftime("%H:%M"),
                     "label": current.strftime("%I:%M %p"),
-                    "booked": (day, slot_time) in booked,
+                    "booked": counts[(day, slot_time)] >= capacity,
                 })
             current += timedelta(minutes=step)
 

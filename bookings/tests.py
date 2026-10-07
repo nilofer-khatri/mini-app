@@ -5,7 +5,6 @@ from pathlib import Path
 from unittest import mock
 
 from django.contrib.auth.models import User
-from django.db import IntegrityError, transaction
 from django.test import TestCase
 from django.utils import timezone
 
@@ -50,14 +49,27 @@ class BookingFormTests(BaseSalonTest):
         booking.refresh_from_db()
         self.assertEqual(booking.total_amount, Decimal("400"))
 
-    def test_double_booking_is_rejected(self):
+    def test_one_person_salon_rejects_a_second_booking(self):
         first = self.make_form()
         self.assertTrue(first.is_valid(), first.errors)
         first.save()
 
         second = self.make_form(customer_name="Someone Else")
         self.assertFalse(second.is_valid())
-        self.assertIn("already booked", str(second.errors))
+        self.assertIn("fully booked", str(second.errors))
+
+    def test_salon_with_two_staff_allows_two_bookings_but_not_three(self):
+        self.salon.staff_count = 2
+        self.salon.save()
+
+        for name in ("First", "Second"):
+            form = self.make_form(customer_name=name)
+            self.assertTrue(form.is_valid(), form.errors)
+            form.save()
+
+        third = self.make_form(customer_name="Third")
+        self.assertFalse(third.is_valid())
+        self.assertIn("fully booked", str(third.errors))
 
     def test_cancelled_slot_can_be_booked_again(self):
         first = self.make_form()
@@ -94,17 +106,6 @@ class BookingFormTests(BaseSalonTest):
 
 
 class BookingModelTests(BaseSalonTest):
-    def test_database_blocks_two_active_bookings_in_one_slot(self):
-        Booking.objects.create(
-            customer_name="A", customer_phone="9876543210",
-            date=self.tomorrow, time=time(10, 0),
-        )
-        with self.assertRaises(IntegrityError), transaction.atomic():
-            Booking.objects.create(
-                customer_name="B", customer_phone="9876543211",
-                date=self.tomorrow, time=time(10, 0),
-            )
-
     def test_calculate_total(self):
         booking = Booking.objects.create(
             customer_name="A", customer_phone="9876543210",
@@ -115,16 +116,34 @@ class BookingModelTests(BaseSalonTest):
 
 
 class AvailabilityTests(BaseSalonTest):
+    def slots_for_tomorrow(self):
+        days = build_availability(self.salon)
+        day = next(d for d in days if d["iso"] == self.tomorrow.isoformat())
+        return {s["value"]: s for _, group in day["groups"] for s in group}
+
     def test_booked_slot_is_marked_booked(self):
         Booking.objects.create(
             customer_name="A", customer_phone="9876543210",
             date=self.tomorrow, time=time(12, 0),
         )
-        days = build_availability(self.salon)
-        day = next(d for d in days if d["iso"] == self.tomorrow.isoformat())
-        slots = {s["value"]: s for _, group in day["groups"] for s in group}
+        slots = self.slots_for_tomorrow()
         self.assertTrue(slots["12:00"]["booked"])
         self.assertFalse(slots["12:30"]["booked"])
+
+    def test_slot_stays_free_until_all_staff_are_booked(self):
+        self.salon.staff_count = 2
+        self.salon.save()
+        Booking.objects.create(
+            customer_name="A", customer_phone="9876543210",
+            date=self.tomorrow, time=time(12, 0),
+        )
+        self.assertFalse(self.slots_for_tomorrow()["12:00"]["booked"])
+
+        Booking.objects.create(
+            customer_name="B", customer_phone="9876543211",
+            date=self.tomorrow, time=time(12, 0),
+        )
+        self.assertTrue(self.slots_for_tomorrow()["12:00"]["booked"])
 
     def test_strip_starts_today_then_tomorrow(self):
         days = build_availability(self.salon)

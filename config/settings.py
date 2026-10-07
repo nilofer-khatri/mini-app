@@ -60,8 +60,13 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.environ.get("DB_PATH", BASE_DIR / "db.sqlite3"),
+        'OPTIONS': {
+            'transaction_mode': 'IMMEDIATE',
+            'timeout': 20,
+        },
     }
 }
+
 EXCEL_EXPORT_PATH = DATA_DIR / "bookings.xlsx"
 
 AUTH_PASSWORD_VALIDATORS = [

@@ -36,14 +36,7 @@ class Booking(models.Model):
 
     class Meta:
         ordering = ["date", "time"]
-        constraints = [
-            # Two active bookings cannot share the same date and time
-            models.UniqueConstraint(
-                fields=["date", "time"],
-                condition=~models.Q(status="cancelled"),
-                name="unique_active_slot",
-            )
-        ]
+        indexes = [models.Index(fields=["date", "time"])]
 
     def calculate_total(self):
         return self.services.aggregate(t=Sum("price"))["t"] or 0

@@ -1,8 +1,8 @@
-from django.db import IntegrityError
+from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 
 from salon.models import Salon, Service
-from .availability import build_availability
+from .availability import build_availability, slot_is_full
 from .excel import export_bookings_to_excel
 from .forms import BookingForm
 from .models import Booking
@@ -12,12 +12,14 @@ def home(request):
     salon = Salon.objects.first()
     if request.method == "POST":
         form = BookingForm(request.POST, salon=salon)
+        booking = None
         if form.is_valid():
-            try:
-                booking = form.save()
-            except IntegrityError:
-                form.add_error(None, "Sorry, that slot was just taken. Please choose another.")
-            else:
+            with transaction.atomic():
+                if slot_is_full(salon, form.cleaned_data["date"], form.cleaned_data["time"]):
+                    form.add_error(None, "Sorry, that slot was just taken. Please choose another.")
+                else:
+                    booking = form.save()
+            if booking:
                 export_bookings_to_excel()
                 request.session["last_booking"] = booking.pk
                 return redirect("booking_success")

@@ -5,6 +5,7 @@ from django import forms
 from django.utils import timezone
 
 from salon.models import Service
+from .availability import slot_is_full
 from .models import Booking
 
 
@@ -67,6 +68,7 @@ class BookingForm(forms.ModelForm):
 
     def __init__(self, *args, salon=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.salon = salon
         self.fields["time"].widget.choices = time_choices(salon)
         self.fields["date"].widget.attrs["min"] = timezone.localdate().isoformat()
         self.initial.setdefault("date", timezone.localdate())
@@ -102,12 +104,9 @@ class BookingForm(forms.ModelForm):
                 raise forms.ValidationError(
                     "That time has already passed. Please choose a later slot."
                 )
-            taken = Booking.objects.filter(
-                date=chosen_date, time=chosen_time
-            ).exclude(status=Booking.Status.CANCELLED)
-            if taken.exists():
+            if slot_is_full(self.salon, chosen_date, chosen_time):
                 raise forms.ValidationError(
-                    "Sorry, that time slot is already booked. Please choose another."
+                    "Sorry, that time slot is fully booked. Please choose another."
                 )
         return cleaned
 

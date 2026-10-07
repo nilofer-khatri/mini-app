@@ -1,6 +1,6 @@
+from django.core.validators import MinValueValidator
 from django.db import models
 
-# Create your models here.
 
 class Salon(models.Model):
     name = models.CharField(max_length=100)
@@ -10,6 +10,11 @@ class Salon(models.Model):
     closing_time = models.TimeField(default="20:00")
     slot_minutes = models.PositiveIntegerField(
         default=30, help_text="Length of one booking slot in minutes"
+    )
+    staff_count = models.PositiveIntegerField(
+        default=1,
+        validators=[MinValueValidator(1)],
+        help_text="How many customers can be served at the same time (staff or chairs)",
     )
 
     def __str__(self):
